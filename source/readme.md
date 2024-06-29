@@ -48,4 +48,4 @@ npm start
 ## Issues
 ### If you encounter any issues or bugs in the project, please report them using the GitHub Issues feature. Provide as much detail as possible, including steps to reproduce the issue and any error messages.
 ## Contact
-### For questions or feedback about the project, please contact __Tushar Aich__ at [Email](mailto:avenshar3000@gmail.com).
+### For questions or feedback about the project, please contact __Tushar Aich__ at avenshar3000@gmail.com.
