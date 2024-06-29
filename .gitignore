@@ -1,0 +1,38 @@
+# Node.js and npm files
+node_modules/
+npm-debug.log
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Environment files
+.env
+config.json
+
+# Build and dist files
+build/
+dist/
+
+# Coverage files
+coverage/
+
+# Test files
+test-results.xml
+
+# Dependency files
+yarn.lock
+package-lock.json
+
+# Other files
+*.swp
+*.tmp
