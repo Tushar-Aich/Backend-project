@@ -11,28 +11,20 @@
 ## Installation
 ### Clone the repository using 
 ```
-
 git clone https://github.com/your-username/learning-backend-from-chai-aur-code.git
-
 ```
 ### Navigate to the project directory using 
 ```
-
 cd learning-backend-from-chai-aur-code
-
 ```
 ### Install dependencies using
 ```
-
 npm install
-
 ```
 ## Running the Project
 ### Start the server using
 ```
-
 npm start
-
 ```
 ### Open a web browser and navigate to http://localhost:3000
 ## Usage
