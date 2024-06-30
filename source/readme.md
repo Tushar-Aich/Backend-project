@@ -11,7 +11,7 @@
 ## Installation
 ### Clone the repository using 
 ```
-git clone https://github.com/your-username/learning-backend-from-chai-aur-code.git
+git clone https://github.com/Tushar-Aich/learning-backend-from-chai-aur-code.git
 ```
 ### Navigate to the project directory using 
 ```
