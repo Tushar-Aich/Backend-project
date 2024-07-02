@@ -1,6 +1,7 @@
 import {v2 as cloudinary} from 'cloudinary';
 import dotenv from 'dotenv';
 import fs from "fs";
+import { ApiError } from './APIerror.js';
 
 dotenv.config({
     path: "./source/.env",
@@ -31,4 +32,14 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
-export { uploadOnCloudinary};
+const deleteFile = async (oldPublic_id) => {
+    try {
+        const response = await cloudinary.uploader.destroy(oldPublic_id)
+        console.log("response of delete function in cloudinary.js file", response);
+        return response
+    } catch (error) {
+        throw new ApiError(400, "Something went wrong while deleting file from cloudinary", [error])
+    }
+}
+
+export { uploadOnCloudinary, deleteFile};

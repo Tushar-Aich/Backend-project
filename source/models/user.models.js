@@ -29,10 +29,16 @@ const userSchema = new mongoose.Schema(
             type: String,  //cloudinary url for images
             required: true,
         },
+        avatarPublicId: { //for deletion of older avtar after updation
+            type: String
+        },
         coverImage: {
-            
             type: String,  //cloudinary url for images
-        },watchHistory: [
+        },
+        coverImagePublicId: { //for deletion of older coverImage after updation
+            type: String
+        },
+        watchHistory: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Video"
