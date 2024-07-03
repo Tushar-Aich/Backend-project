@@ -1,0 +1,42 @@
+import mongoose, {isValidObjectId} from "mongoose"
+import {asyncHandler} from "../utils/asyncHandler.js"
+import {ApiError} from "../utils/APIerror.js"
+import {APIresponse} from "../utils/APIresponse.js"
+import {Tweet} from "../models/tweet.models.js"
+import {User} from "../models/user.models.js"
+
+const createTweet = asyncHandler(async (req, res) => {
+
+    if (!isValidObjectId(req.user?._id)) throw new ApiError(400, "Invalid user ID");
+
+    const user = await User.findById(req.user?._id)
+    if(!user) throw new ApiError(400, "Can't post tweet since user doesnot exist");
+
+    const {content} = req.body
+    console.log("req.body from tweet controller :: ", req.body);
+
+    if([content].some((value) => value?.trim() === "")){
+        throw new ApiError(400, "Content is rquired");
+    }
+
+    const tweet = await Tweet.create(
+        {
+            content,
+            owner:user
+        }
+    )
+    console.log(tweet);
+    if(!tweet) throw new ApiError(400, "Something went wrong");
+
+    return res
+    .status(200)
+    .json(
+        new APIresponse(200, tweet, "Tweet created successfully")
+    )
+
+}) // create tweet done
+
+const getUserTweets = asyncHandler(async (req, res) => {
+})
+
+export {createTweet, getUserTweets}
