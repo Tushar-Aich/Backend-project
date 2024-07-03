@@ -37,6 +37,18 @@ const createTweet = asyncHandler(async (req, res) => {
 }) // create tweet done
 
 const getUserTweets = asyncHandler(async (req, res) => {
-})
+    const {userId} = req.params
+    if(!isValidObjectId(userId)) throw new ApiError(400, "invalid user id");
+
+    const user = await User.findById(userId)
+    if(!user) throw new ApiError(400, "User not found");
+
+    const tweets = await Tweet.find({owner: user._id})
+    return res
+    .status(200)
+    .json(
+      new APIresponse(200, tweets, "User tweets fetched successfully")
+    )
+});
 
 export {createTweet, getUserTweets}
