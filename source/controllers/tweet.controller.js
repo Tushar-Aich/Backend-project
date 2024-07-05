@@ -43,7 +43,53 @@ const getUserTweets = asyncHandler(async (req, res) => {
     const user = await User.findById(userId)
     if(!user) throw new ApiError(400, "User not found");
 
-    const tweets = await Tweet.find({owner: user._id})
+    const tweets = await Tweet.aggregate([
+        {
+            $match: {
+                owner: new mongoose.Types.ObjectId(userId)
+            }
+        },
+        {
+            $lookup:{
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "ownerDetails",
+                pipeline: [
+                    {
+                        $project: {
+                            userName: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields: {
+                ownerDetails: {
+                    $first: "$ownerDetails"
+                }
+            }
+        },
+        {
+            $sort: {
+                createdAt: -1
+            }
+        },
+        {
+            $project: {
+                content: 1,
+                ownerDetails: 1,
+                createdAt: 1
+                //likeCount
+                //likedBy
+            }
+        }
+    ])
+
+    if(!tweets) throw new ApiError(400, "Something went wrong while fetching all tweets")
+
     return res
     .status(200)
     .json(
@@ -55,6 +101,9 @@ const updateTweet = asyncHandler(async (req, res) => {
     const {tweetId} = req.params
     if(!isValidObjectId(tweetId)) throw new ApiError(400, "Tweet was not found");
 
+    const user = await User.findById(req.user?._id)
+    if(!user) throw new ApiError(400, "only user can update their tweets")
+
     const {content} = req.body
     if(!content) throw new ApiError(400, "Content cannot be empty");
 
@@ -64,6 +113,9 @@ const updateTweet = asyncHandler(async (req, res) => {
             $set: {
                 content,
             }
+        },
+        {
+            new: true
         }
     )
     console.log("new Tweet :: ", newTweet)
@@ -79,7 +131,12 @@ const deleteTweet = asyncHandler(async (req, res) => {
     const {tweetId} = req.params
     if(!isValidObjectId(tweetId)) throw new ApiError(400, "Tweet could not be found");
 
+    const user = await User.findById(req.user?._id)
+    if(!user) throw new ApiError(400, "only user can delete their tweets")
+
     const deletedTweet = await Tweet.findByIdAndDelete(tweetId)
+    if(!deletedTweet) throw new ApiError(400, "Something went wrong while deleting tweet")
+
     console.log(deletedTweet)
 
     return res
