@@ -70,6 +70,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
                 ownerDetails: {
                     $first: "$ownerDetails"
                 }
+                //like details
             }
         },
         {
@@ -87,7 +88,6 @@ const getUserTweets = asyncHandler(async (req, res) => {
             }
         }
     ])
-
     if(!tweets) throw new ApiError(400, "Something went wrong while fetching all tweets")
 
     return res
