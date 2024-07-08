@@ -27,7 +27,7 @@ router
     );
 
 router
-    .route("/videoId")
+    .route("/:videoId")
     .get(getVideoById)
     
 export default router
