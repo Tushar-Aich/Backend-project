@@ -108,9 +108,24 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     if(!isValidObjectId(videoId)) throw new ApiError(400, "Invalid Video ID");
-    const video = await Video.findById(videoId)
+    let video = await Video.findById(videoId)
     if(!video) throw new ApiError(400, "Video not found");
-    
+    if(video.isPublished === false) throw new ApiError(400, "Video is not published yet");
+
+    const setViews = await Video.findByIdAndUpdate(
+        videoId, 
+        {
+            $inc: {
+                views: 1,
+                runValidators: true
+            }
+        },
+        {
+            new: true,
+
+        }
+    )
+
     return res
     .status(200)
     .json(
