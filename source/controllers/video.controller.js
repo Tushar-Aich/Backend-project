@@ -133,7 +133,68 @@ const getVideoById = asyncHandler(async (req, res) => {
     )
 }) // get video by id done
 
+const getAllVideos = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10, query, sortBy, sortType, userId} = req.query
+
+    const pageNum = parseInt(page)
+    const limitNum = parseInt(limit)
+
+    if(!Number.isInteger(pageNum) || !Number.isInteger(limitNum)) throw new ApiError(400, "Invalid queries passed");
+
+    const skip = (pageNum - 1) * limitNum
+
+    let sorting;
+    if(sortType === "desc") sorting = -1
+    else if(sortType === "asc") sorting = 1
+    else throw new ApiError(400, "Invalid queries passed")
+
+    const videos = await Video.aggregate([
+        {
+            $match:{
+                $or: [
+                    {
+                        title: {
+                            $regex: query, // for finding videos according to the queries
+                            $options: "i"  // formatching upper and lower case characters
+                        },
+                    },
+                    {
+                        owner: new mongoose.Types.ObjectId(userId)
+                    }
+                ]
+            }
+        },
+        {
+            $project: {
+                videoFile: 1,
+                thumbnail: 1,
+                title: 1,
+                description: 1,
+                isPublished: 1,
+                owner: 1,
+                views: 1,
+                createdAt: 1
+            }
+        }
+    ])
+    .sort({
+        [sortBy]: sorting
+    })
+    .skip(skip)
+    .limit(limitNum)
+
+
+    if(!videos) throw new ApiError(400, "No videos found");
+
+    return res
+    .status(200)
+    .json(
+        new APIresponse(200, videos, "All videos fetched successfully")
+    )
+}) // get all videos done
+
 export {
     publishAVideo,
-    getVideoById
+    getVideoById,
+    getAllVideos
 }

@@ -2,6 +2,7 @@ import {Router} from "express";
 import {
     getVideoById,
     publishAVideo,
+    getAllVideos
 } from "../controllers/video.controller.js"
 import {verifyJWT} from "../middlewares/auth.middleware.js"
 import {upload} from "../middlewares/multer.middleware.js"
@@ -11,6 +12,7 @@ router.use(verifyJWT) //verifies user before performing any task
 
 router
     .route("/")
+    .get(getAllVideos)
     .post(
         upload.fields([
             {
