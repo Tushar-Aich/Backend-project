@@ -3,7 +3,7 @@ import {Video} from "../models/video.models.js";
 import {User} from "../models/user.models.js";
 import { ApiError } from "../utils/APIerror.js";
 import {APIresponse} from "../utils/APIresponse.js"
-import { uploadOnCloudinary} from "../utils/Cloudinary.js"
+import { deleteFile, uploadOnCloudinary} from "../utils/Cloudinary.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -42,7 +42,9 @@ const publishAVideo = asyncHandler(async (req, res) => {
             title,
             description,
             videoFile: videoFile.url,
+            videoPublicId: videoFile.public_id,
             thumbnail: thumbnail.url,
+            thumbnailPublicId: thumbnail.public_id,
             owner: user,
             duration: videoFile.duration
         }
@@ -75,8 +77,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
             $addFields: {
                 ownerDetails: {
                     $first: "$ownerDetails"
-                },
-                //like details
+                }
             }
         },
         {
@@ -87,7 +88,9 @@ const publishAVideo = asyncHandler(async (req, res) => {
         {
             $project: {
                 videoFile: 1,
+                videoPublicId: 1,
                 thumbnail: 1,
+                thumbnailPublicId: 1,
                 title: 1,
                 description: 1,
                 isPublished: 1,
@@ -160,7 +163,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
                     },
                     {
                         owner: new mongoose.Types.ObjectId(userId)
-                    }
+                    },
+                    {}
                 ]
             }
         },
@@ -193,8 +197,69 @@ const getAllVideos = asyncHandler(async (req, res) => {
     )
 }) // get all videos done
 
+const updateVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+
+    const {title, description} = req.body
+    if([title, description].some((value) => value?.trim() === "")){
+        throw new ApiError(400, "All fields are rquired");
+    }
+
+    const video = await Video.findById(videoId)
+    if(!video) throw new ApiError(400, "Invalid video Id");
+
+    const oldThumbnailId = video.thumbnailPublicId
+
+    const user = await User.findById(video.owner)
+    if(!user) throw new ApiError(400, "Invalid user");
+
+    // let thumbnailLocalPath;
+    // if(req.files && Array.isArray(req.files.thumbnail) && req.files.thumbnail.length > 0){
+    //     thumbnailLocalPath = req.files.thumbnail[0].path
+    // }else{
+    //     throw new ApiError(400, "No thumbnail file uploaded");
+    // }
+
+    // const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
+    // if(!thumbnail) throw new ApiError(400, "Something went wrong while uploading file to cloudinary");
+    //tried to copy paste from publishVideo function but failed so copied from updateAvatar function in user.controller
+    //logic build successfully
+
+    const thumbnailLocalPath = req.file?.path
+    if(!thumbnailLocalPath) throw new ApiError(400, "thumbnail file is missing");
+    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
+    if(!thumbnail.url) throw new ApiError(400, "Error hile uploading on cloudinary");
+
+    const updatedVideo = await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $set: {
+                thumbnail: thumbnail.url,
+                thumbnailPublicId: thumbnail.public_id,
+                title,
+                description
+            }
+        },
+        {
+            new: true
+        }
+    )
+    if(!updatedVideo) throw new ApiError(400, "Updation failed");
+
+    if(oldThumbnailId) await deleteFile(oldThumbnailId);
+
+    console.log("updated Video :: ", updatedVideo);
+
+    return res
+    .status(200)
+    .json(
+        new APIresponse(200, updatedVideo, "video Updated Successfully")
+    )
+}) // update video done
+
 export {
     publishAVideo,
     getVideoById,
-    getAllVideos
+    getAllVideos,
+    updateVideo
 }
