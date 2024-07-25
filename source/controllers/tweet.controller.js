@@ -100,9 +100,13 @@ const getUserTweets = asyncHandler(async (req, res) => {
 const updateTweet = asyncHandler(async (req, res) => {
     const {tweetId} = req.params
     if(!isValidObjectId(tweetId)) throw new ApiError(400, "Tweet was not found");
+    const tweet = await Tweet.findById(tweetId);
+    if(!tweet) throw new ApiError(400, "Tweet not found");
 
     const user = await User.findById(req.user?._id)
-    if(!user) throw new ApiError(400, "only user can update their tweets")
+    if(!user) throw new ApiError(400, "only user can update their tweets");
+
+    if(tweet.owner.toString() !== user._id.toString()) throw new ApiError(400, "only owner update their tweets");
 
     const {content} = req.body
     if(!content) throw new ApiError(400, "Content cannot be empty");
@@ -130,9 +134,13 @@ const updateTweet = asyncHandler(async (req, res) => {
 const deleteTweet = asyncHandler(async (req, res) => {
     const {tweetId} = req.params
     if(!isValidObjectId(tweetId)) throw new ApiError(400, "Tweet could not be found");
+    const tweet = await Tweet.findById(tweetId);
+    if(!tweet) throw new ApiError(400, "Tweet not found");
 
     const user = await User.findById(req.user?._id)
-    if(!user) throw new ApiError(400, "only user can delete their tweets")
+    if(!user) throw new ApiError(400, "only user can delete their tweets");
+
+    if(tweet.owner.toString() !== user._id.toString()) throw new ApiError(400, "only owner delete their tweets");
 
     const deletedTweet = await Tweet.findByIdAndDelete(tweetId)
     if(!deletedTweet) throw new ApiError(400, "Something went wrong while deleting tweet")

@@ -213,6 +213,8 @@ const updateVideo = asyncHandler(async (req, res) => {
     const user = await User.findById(video.owner)
     if(!user) throw new ApiError(400, "Invalid user");
 
+    if(user?._id.toString() !== video.owner.toString()) throw new ApiError(400, "Only owner can update the video");
+
     // let thumbnailLocalPath;
     // if(req.files && Array.isArray(req.files.thumbnail) && req.files.thumbnail.length > 0){
     //     thumbnailLocalPath = req.files.thumbnail[0].path
@@ -257,9 +259,47 @@ const updateVideo = asyncHandler(async (req, res) => {
     )
 }) // update video done
 
+const deleteVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    const video = await Video.findById(videoId)
+    if(!video) throw new ApiError(404, "Video not found");
+
+    const user = await User.findById(video.owner)
+    if(!user) throw new ApiError(400, "user not found");
+
+    if(user?._id.toString() !== video.owner.toString()) throw new ApiError(400, "Only owner can delete the video");
+
+    const deleteVideoFile = await deleteFile(video.videoPublicId)
+    const deleteThumbnailFile = await deleteFile(video.thumbnailPublicId)
+    const deletedVideo = await Video.findByIdAndDelete(videoId)
+
+    if(!deleteVideoFile || !deleteThumbnailFile || !deletedVideo) throw new ApiError(400, "Something went wrong while deletion",[], "");
+
+    return res
+    .status(200)
+    .json(
+        new APIresponse(200, "Video deleted Successfully")
+    )
+})
+
+const togglePublishStatus = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    const video = await Video.findById(videoId);
+    if(!video) throw new ApiError(400, "Invalid video ID");
+
+    video.isPublished = !video.isPublished;
+    await video.save({validateBeforeSave: false});
+
+    return res
+    .status(200)
+    .json(new APIresponse(200, video, "Video publish status toggled successfully"));
+})
+
 export {
     publishAVideo,
     getVideoById,
     getAllVideos,
-    updateVideo
+    updateVideo,
+    deleteVideo,
+    togglePublishStatus
 }
